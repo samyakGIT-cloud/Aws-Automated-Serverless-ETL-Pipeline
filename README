@@ -1,119 +1,131 @@
-# AWS Automated Serverless ETL Pipeline
+div align="center">
 
+# ⚡ AWS Automated Serverless ETL Pipeline
 
+**Transform nested JSON order data into analytics-ready Parquet and query it with SQL, fully serverless.**
 
+![AWS Lambda](https://img.shields.io/badge/AWS-Lambda-FF9900?style=for-the-badge&logo=awslambda&logoColor=white)
+![Amazon S3](https://img.shields.io/badge/Amazon-S3-569A31?style=for-the-badge&logo=amazons3&logoColor=white)
+![AWS Glue](https://img.shields.io/badge/AWS-Glue-8C4FFF?style=for-the-badge&logo=amazonaws&logoColor=white)
+![Amazon Athena](https://img.shields.io/badge/Amazon-Athena-8C4FFF?style=for-the-badge&logo=amazonaws&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![Apache Parquet](https://img.shields.io/badge/Parquet-Columnar-50ABF1?style=for-the-badge&logo=apache&logoColor=white)
 
-A serverless data engineering project that transforms nested JSON order data into structured Parquet files using AWS services, making the processed data available for SQL-based analytics.
+[Overview](#-overview) •
+[Architecture](#-architecture) •
+[Workflow](#-project-workflow) •
+[Screenshots](#-project-screenshots) •
+[Setup](#-setup-and-execution) •
+[Roadmap](#-future-improvements)
 
-## Project Overview
+</div>
 
-This project demonstrates an automated ETL workflow using AWS Lambda, Amazon S3, AWS Glue, and Amazon Athena.
+---
 
-The pipeline reads raw JSON order data from Amazon S3, processes and flattens nested customer and product information using Python, Pandas, and Boto3, converts the transformed data into Parquet format, and stores the output back in S3.
+## 📌 Overview
 
-AWS Glue Crawler discovers the schema and updates the Glue Data Catalog, allowing the processed data to be queried using Amazon Athena.
+This project is an automated, event-driven **ETL (Extract, Transform, Load)** pipeline built entirely on AWS serverless services.
 
-## Architecture
+It reads raw, **nested JSON order data** from Amazon S3, **flattens** the customer and product information with Python, Pandas, and Boto3, converts the result to **Parquet**, and writes it back to S3. An **AWS Glue Crawler** then discovers the schema and registers it in the **Glue Data Catalog**, so the data can be queried instantly with **Amazon Athena** using standard SQL.
 
-```text
-        Raw JSON Data
-              |
-              v
-          Amazon S3
-              |
-              v
-         AWS Lambda
-      (Python + Pandas
-          + Boto3)
-              |
-              v
-       Data Transformation
-       JSON to Structured Data
-              |
-              v
-       Parquet Conversion
-              |
-              v
-          Amazon S3
-       (Parquet Output)
-              |
-              v
-       AWS Glue Crawler
-              |
-              v
-      AWS Glue Data Catalog
-              |
-              v
-         Amazon Athena
-          (SQL Queries)
+### ✨ Highlights
+
+- 🚀 **Fully serverless:** no servers to provision or manage
+- 🔄 **Event-driven:** an S3 `ObjectCreated` trigger can run the pipeline automatically
+- 🧩 **Nested JSON → flat tables:** order, customer, and product data in one structured dataset
+- 📦 **Columnar storage:** Parquet for smaller files and faster analytical queries
+- 🔍 **SQL-ready:** schema auto-discovered and queryable through Athena
+- 📊 **Observable:** Lambda logs and metrics captured in CloudWatch
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart TD
+    A[📄 Raw Nested JSON] --> B[(Amazon S3<br/>incoming/)]
+    B -->|ObjectCreated trigger| C[⚡ AWS Lambda<br/>Python · Pandas · Boto3]
+    C --> D[🔧 Transformation<br/>Flatten nested JSON]
+    D --> E[📦 Parquet Conversion]
+    E --> F[(Amazon S3<br/>Parquet output)]
+    F --> G[🕷 AWS Glue Crawler]
+    G --> H[📚 Glue Data Catalog]
+    H --> I[🔎 Amazon Athena<br/>SQL Queries]
+    C -.logs & metrics.-> J[📈 CloudWatch]
 ```
 
-## Technologies Used
+---
+
+## 🛠 Technologies Used
 
 | Technology | Purpose |
 |---|---|
-| Python | Data processing and transformation |
-| Pandas | Flattening and structuring JSON records |
-| Boto3 | AWS service integration |
-| Amazon S3 | Raw and transformed data storage |
-| AWS Lambda | Serverless ETL execution |
-| AWS Glue Crawler | Schema discovery |
-| AWS Glue Data Catalog | Metadata management |
-| Amazon Athena | SQL-based data querying |
-| Parquet | Columnar storage format |
-| CloudWatch | Lambda execution logs and monitoring |
+| **Python** | Data processing and transformation |
+| **Pandas** | Flattening and structuring JSON records |
+| **Boto3** | AWS service integration |
+| **Amazon S3** | Raw and transformed data storage |
+| **AWS Lambda** | Serverless ETL execution |
+| **AWS Glue Crawler** | Automatic schema discovery |
+| **AWS Glue Data Catalog** | Metadata management |
+| **Amazon Athena** | SQL-based data querying |
+| **Parquet** | Columnar storage format |
+| **Amazon CloudWatch** | Lambda execution logs and monitoring |
 
-## Project Workflow
+---
 
-1. **Data Ingestion:** Upload raw nested JSON order data to the Amazon S3 incoming folder.
+## 🔁 Project Workflow
 
-2. **Lambda Execution:** AWS Lambda reads the JSON object from S3 using Boto3. An S3 ObjectCreated notification can trigger the function when the event trigger is configured.
+| Step | Stage | Description |
+|:---:|---|---|
+| 1 | **Data Ingestion** | Upload raw nested JSON order data to the S3 incoming folder. |
+| 2 | **Lambda Execution** | Lambda reads the JSON object from S3 using Boto3. An S3 `ObjectCreated` notification can trigger it automatically once configured. |
+| 3 | **Data Transformation** | Python and Pandas flatten nested order, customer, and product information into structured tabular records. |
+| 4 | **Data Conversion** | The transformed dataset is converted from JSON-based input into Parquet format. |
+| 5 | **Data Storage** | Processed Parquet files are stored in a separate S3 output folder. |
+| 6 | **Schema Discovery** | The Glue Crawler scans the output location, discovers the schema, and updates the Glue Data Catalog. |
+| 7 | **Data Analytics** | Athena runs SQL queries on the cataloged Parquet table. |
+| 8 | **Monitoring** | CloudWatch captures Lambda execution logs and runtime metrics. |
 
-3. **Data Transformation:** Python and Pandas flatten nested order, customer, and product information into structured tabular records.
+---
 
-4. **Data Conversion:** The transformed dataset is converted from JSON-based input into Parquet format.
+## 🔧 Data Transformation
 
-5. **Data Storage:** Processed Parquet files are stored in a separate S3 output folder.
+The pipeline extracts and structures the following fields:
 
-6. **Schema Discovery:** AWS Glue Crawler scans the output location and discovers the dataset schema, updating the Glue Data Catalog.
+| Category | Fields |
+|---|---|
+| 🧾 **Order** | Order ID, Order Date, Total Order Amount |
+| 👤 **Customer** | Customer ID, Name, Email, Address |
+| 📦 **Product** | Product ID, Product Name, Category, Price, Quantity |
 
-7. **Data Analytics:** Amazon Athena uses the cataloged table to execute SQL queries on the Parquet dataset.
+---
 
-8. **Monitoring:** Amazon CloudWatch captures Lambda execution logs and runtime metrics.
-
-## Data Transformation
-
-The pipeline extracts and structures fields such as:
-
-- Order ID and Order Date
-- Customer ID, Name, Email, and Address
-- Product ID, Product Name, and Category
-- Product Price and Quantity
-- Total Order Amount
-
-## Sample SQL Query
+## 🔎 Sample SQL Query
 
 ```sql
 SELECT *
 FROM "AwsDataCatalog"."etl_pipeline"."orders_parquet_datalake";
 ```
 
-Additional analytical queries can be used to explore orders, customers, products, and transaction amounts.
+Once the table is cataloged, you can run further analytical queries to explore orders, customers, products, and transaction amounts.
 
-## Repository Structure
+---
+
+## 📁 Repository Structure
 
 ```text
 aws-automated-serverless-etl-pipeline/
 │
-├── lambda_function.py
-├── requirements.txt
+├── lambda_function.py        # Lambda ETL handler
+├── requirements.txt          # Python dependencies
 ├── .gitignore
 ├── README.md
 │
 ├── sample_data/
-│   └── orders_sample.json
+│   └── orders_sample.json    # Sample nested JSON input
 │
-└── screenshots/
+└── screenshots/              # Evidence of each pipeline stage
     ├── architecture.png
     ├── s3_raw_json.png
     ├── lambda_function_code.png
@@ -125,108 +137,111 @@ aws-automated-serverless-etl-pipeline/
     └── athena_query_results.png
 ```
 
-## Project Screenshots
+---
 
-### 1. AWS Architecture
+## 📸 Project Screenshots
 
+### 1️⃣ AWS Architecture
 ![Architecture](screenshots/architecture.png)
 
-### 2. Raw JSON Data in Amazon S3
-
+### 2️⃣ Raw JSON Data in Amazon S3
 ![Raw JSON](screenshots/s3_raw_json.png)
 
-### 3. AWS Lambda Implementation
-
+### 3️⃣ AWS Lambda Implementation
 ![Lambda Code](screenshots/lambda_function_code.png)
 
-### 4. Lambda Execution
-
+### 4️⃣ Lambda Execution
 ![Lambda Execution](screenshots/lambda_success.png)
 
-### 5. CloudWatch Monitoring
-
+### 5️⃣ CloudWatch Monitoring
 ![CloudWatch](screenshots/cloudwatch_logs.png)
 
-### 6. Transformed Parquet Data
-
+### 6️⃣ Transformed Parquet Data
 ![Parquet Output](screenshots/s3_parquet_output.png)
 
-### 7. AWS Glue Crawler
-
+### 7️⃣ AWS Glue Crawler
 ![Glue Crawler](screenshots/glue_crawler.png)
 
-### 8. Amazon Athena Query Results
-
+### 8️⃣ Amazon Athena Query Results
 ![Athena Results](screenshots/athena_query_results.png)
 
-## Setup and Execution
+---
+
+## 🚀 Setup and Execution
 
 ### Prerequisites
 
-- AWS account
-- Python 3.x
-- AWS CLI (optional for local AWS interaction)
-- Required AWS permissions for S3, Lambda, Glue, and CloudWatch
+- ☁️ An AWS account
+- 🐍 Python 3.x
+- 💻 AWS CLI *(optional, for local AWS interaction)*
+- 🔐 AWS permissions for **S3, Lambda, Glue, Athena, and CloudWatch**
 
 ### Steps
 
-1. Clone the repository:
+**1. Clone the repository**
 
 ```bash
 git clone https://github.com/samyakGIT-cloud/aws-automated-serverless-etl-pipeline.git
-```
-
-2. Navigate to the project directory:
-
-```bash
 cd aws-automated-serverless-etl-pipeline
 ```
 
-3. Install the Python dependencies:
+**2. Install the Python dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Deploy the Lambda function with its required dependencies.
+**3. Deploy the Lambda function** with its required dependencies (Pandas and a Parquet engine such as PyArrow, packaged as a layer or deployment bundle).
 
-5. Configure the required S3 bucket, input/output folders, IAM permissions, and Glue Crawler.
+**4. Configure AWS resources**: the S3 bucket with input/output folders, IAM permissions, and the Glue Crawler.
 
-6. Configure an S3 ObjectCreated trigger if automatic event-driven execution is required.
+**5. *(Optional)* Add an S3 `ObjectCreated` trigger** for automatic, event-driven execution.
 
-7. Upload the sample JSON data to the S3 input folder.
+**6. Upload the sample data** from `sample_data/orders_sample.json` to the S3 input folder.
 
-8. Run the Glue Crawler and query the cataloged table using Athena.
+**7. Run the Glue Crawler**, then query the cataloged table in Athena.
 
-**Note:** AWS resource configuration and Lambda dependency packaging are required before running this pipeline in your own AWS account. Configure bucket names and resource names according to your environment.
-
-## Key Learnings
-
-- Building serverless ETL workflows using AWS.
-- Processing nested JSON data with Python and Pandas.
-- Integrating AWS services using Boto3.
-- Converting structured data into Parquet.
-- Understanding schema discovery and metadata management with AWS Glue.
-- Querying S3-based datasets using Amazon Athena.
-- Monitoring serverless execution through CloudWatch.
-
-## Future Improvements
-
-- Add data quality checks and validation.
-- Implement duplicate handling and idempotent processing.
-- Introduce date-based partitioning for Parquet datasets.
-- Improve error handling and retry mechanisms.
-- Apply least-privilege IAM policies.
-- Add automated deployment and CI/CD.
-
-## Author
-
-**Samyak Kamble**
-
-Data Engineering | Python | SQL | AWS
-
-GitHub: [@samyakGIT-cloud](https://github.com/samyakGIT-cloud)
+> [!NOTE]
+> AWS resource configuration and Lambda dependency packaging are required before running this pipeline in your own AWS account. Configure bucket names and resource names to match your environment.
 
 ---
 
-*This project was developed as a hands-on learning project to understand AWS-based serverless data engineering workflows.*
+## 🎓 Key Learnings
+
+- Building serverless ETL workflows on AWS
+- Processing nested JSON data with Python and Pandas
+- Integrating AWS services using Boto3
+- Converting structured data into Parquet
+- Schema discovery and metadata management with AWS Glue
+- Querying S3-based datasets using Amazon Athena
+- Monitoring serverless execution through CloudWatch
+
+---
+
+## 🗺 Future Improvements
+
+- [ ] Add data quality checks and validation
+- [ ] Implement duplicate handling and idempotent processing
+- [ ] Introduce date-based partitioning for Parquet datasets
+- [ ] Improve error handling and retry mechanisms
+- [ ] Apply least-privilege IAM policies
+- [ ] Add automated deployment and CI/CD
+
+---
+
+## 👨‍💻 Author
+
+**Samyak Kamble**
+*Data Engineering • Python • SQL • AWS*
+
+[![GitHub](https://img.shields.io/badge/GitHub-samyakGIT--cloud-181717?style=for-the-badge&logo=github)](https://github.com/samyakGIT-cloud)
+
+---
+
+<div align="center">
+
+⭐ If you found this project useful, consider giving it a star!
+
+*Developed as a hands-on learning project to understand AWS-based serverless data engineering workflows.*
+
+</div>
